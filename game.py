@@ -42,7 +42,7 @@ class Ball:
         self.color = WHITE
 
 
-def make_ball(color_id):
+def make_ball(color):
     """
     Function to make a new, random ball.
     """
@@ -60,7 +60,7 @@ def make_ball(color_id):
     if ball.change_y == 0:
         ball.change_y = 1
 
-    ball.color = colors[color_index]
+    ball.color = color
 
     return ball
 
@@ -72,7 +72,7 @@ def main():
     pygame.init()
 
     color_index = 0
-    modulo_index = 6
+    modulo_index = 7
 
     # Set the height and width of the screen
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
@@ -103,10 +103,9 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 # Space bar! Spawn a new ball.
                 if event.key == pygame.K_SPACE:
-                    ball = make_ball(color_index)
-                    ball.color = colors[color_index]
+                    ball = make_ball(colors[color_index])
                     ball_list.append(ball)
-                    color_index = (color_index + 1)
+                    color_index = (color_index + 1) % modulo_index
 
         # --- Logic
         for ball in ball_list:
