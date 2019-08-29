@@ -1,10 +1,10 @@
 # Project Title
 
-Animated Car Game Example
+Animated item Game Example
 
 ## Description
 
-Animates a car based on arrow key presses.
+Animates an item based on arrow key presses.
 
 ## Getting Started
 

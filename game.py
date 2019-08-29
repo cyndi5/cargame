@@ -1,112 +1,119 @@
-import os
+"""
+ This example shows having multiple balls bouncing around the screen at the
+ same time. You can hit the space bar to spawn more balls.
+
+ Sample Python/Pygame Programs
+ Simpson College Computer Science
+ http://programarcadegames.com/
+ http://simpson.edu/computer-science/
+"""
+
 import pygame
-from math import tan, radians, degrees, copysign
-from pygame.math import Vector2
+import random
+
+# Define some colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+SCREEN_WIDTH = 700
+SCREEN_HEIGHT = 500
+BALL_SIZE = 25
 
 
-class Car:
-    def __init__(self, x, y, angle=0.0, length=4, max_steering=30, max_acceleration=5.0):
-        self.position = Vector2(x, y)
-        self.velocity = Vector2(0.0, 0.0)
-        self.angle = angle
-        self.length = length
-        self.max_acceleration = max_acceleration
-        self.max_steering = max_steering
-        self.max_velocity = 20
-        self.brake_deceleration = 10
-        self.free_deceleration = 2
+class Ball:
+    """
+    Class to keep track of a ball's location and vector.
+    """
 
-        self.acceleration = 0.0
-        self.steering = 0.0
-
-    def update(self, dt):
-        self.velocity += (self.acceleration * dt, 0)
-        self.velocity.x = max(-self.max_velocity, min(self.velocity.x, self.max_velocity))
-
-        if self.steering:
-            turning_radius = self.length / tan(radians(self.steering))
-            angular_velocity = self.velocity.x / turning_radius
-        else:
-            angular_velocity = 0
-
-        self.position += self.velocity.rotate(-self.angle) * dt
-        self.angle += degrees(angular_velocity) * dt
-
-
-class Game:
     def __init__(self):
-        pygame.init()
-        pygame.display.set_caption("Car tutorial")
-        width = 1280
-        height = 720
-        self.screen = pygame.display.set_mode((width, height))
-        self.clock = pygame.time.Clock()
-        self.ticks = 60
-        self.exit = False
-
-    def run(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(current_dir, "car.png")
-        car_image = pygame.image.load(image_path)
-        car = Car(10, 10)
-        ppu = 32
-
-        while not self.exit:
-            dt = self.clock.get_time() / 1000
-
-            # Event queue
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.exit = True
-
-            # User input
-            pressed = pygame.key.get_pressed()
-
-            if pressed[pygame.K_UP]:
-                if car.velocity.x < 0:
-                    car.acceleration = car.brake_deceleration
-                else:
-                    car.acceleration += 1 * dt
-            elif pressed[pygame.K_DOWN]:
-                if car.velocity.x > 0:
-                    car.acceleration = -car.brake_deceleration
-                else:
-                    car.acceleration -= 1 * dt
-            elif pressed[pygame.K_SPACE]:
-                if abs(car.velocity.x) > dt * car.brake_deceleration:
-                    car.acceleration = -copysign(car.brake_deceleration, car.velocity.x)
-                else:
-                    car.acceleration = -car.velocity.x / dt
-            else:
-                if abs(car.velocity.x) > dt * car.free_deceleration:
-                    car.acceleration = -copysign(car.free_deceleration, car.velocity.x)
-                else:
-                    if dt != 0:
-                        car.acceleration = -car.velocity.x / dt
-            car.acceleration = max(-car.max_acceleration, min(car.acceleration, car.max_acceleration))
-
-            if pressed[pygame.K_RIGHT]:
-                car.steering -= 30 * dt
-            elif pressed[pygame.K_LEFT]:
-                car.steering += 30 * dt
-            else:
-                car.steering = 0
-            car.steering = max(-car.max_steering, min(car.steering, car.max_steering))
-
-            # Logic
-            car.update(dt)
-
-            # Drawing
-            self.screen.fill((0, 0, 0))
-            rotated = pygame.transform.rotate(car_image, car.angle)
-            rect = rotated.get_rect()
-            self.screen.blit(rotated, car.position * ppu - (rect.width / 2, rect.height / 2))
-            pygame.display.flip()
-
-            self.clock.tick(self.ticks)
-        pygame.quit()
+        self.x = 0
+        self.y = 0
+        self.change_x = 0
+        self.change_y = 0
 
 
-if __name__ == '__main__':
-    game = Game()
-    game.run()
+def make_ball():
+    """
+    Function to make a new, random ball.
+    """
+    ball = Ball()
+    # Starting position of the ball.
+    # Take into account the ball size so we don't spawn on the edge.
+    ball.x = random.randrange(BALL_SIZE, SCREEN_WIDTH - BALL_SIZE)
+    ball.y = random.randrange(BALL_SIZE, SCREEN_HEIGHT - BALL_SIZE)
+
+    # Speed and direction of rectangle
+    ball.change_x = random.randrange(-2, 3)
+    ball.change_y = random.randrange(-2, 3)
+
+    return ball
+
+
+def main():
+    """
+    This is our main program.
+    """
+    pygame.init()
+
+    # Set the height and width of the screen
+    size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+    screen = pygame.display.set_mode(size)
+
+    pygame.display.set_caption("Bouncing Balls")
+
+    # Loop until the user clicks the close button.
+    done = False
+
+    # Used to manage how fast the screen updates
+    clock = pygame.time.Clock()
+
+    ball_list = []
+
+    ball = make_ball()
+    ball_list.append(ball)
+
+    # -------- Main Program Loop -----------
+    while not done:
+        # --- Event Processing
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+            elif event.type == pygame.KEYDOWN:
+                # Space bar! Spawn a new ball.
+                if event.key == pygame.K_SPACE:
+                    ball = make_ball()
+                    ball_list.append(ball)
+
+        # --- Logic
+        for ball in ball_list:
+            # Move the ball's center
+            ball.x += ball.change_x
+            ball.y += ball.change_y
+
+            # Bounce the ball if needed
+            if ball.y > SCREEN_HEIGHT - BALL_SIZE or ball.y < BALL_SIZE:
+                ball.change_y *= -1
+            if ball.x > SCREEN_WIDTH - BALL_SIZE or ball.x < BALL_SIZE:
+                ball.change_x *= -1
+
+        # --- Drawing
+        # Set the screen background
+        screen.fill(BLACK)
+
+        # Draw the balls
+        for ball in ball_list:
+            pygame.draw.circle(screen, WHITE, [ball.x, ball.y], BALL_SIZE)
+
+        # --- Wrap-up
+        # Limit to 60 frames per second
+        clock.tick(60)
+
+        # Go ahead and update the screen with what we've drawn.
+        pygame.display.flip()
+
+    # Close everything down
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
