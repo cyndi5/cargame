@@ -13,21 +13,19 @@ import random
 import colorsys
 
 
-def get_N_HexCol(N=5):
-    HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in colorsys.xrange(N)]
-    hex_out = []
-    for rgb in HSV_tuples:
-        rgb = map(lambda x: int(x * 255), colorsys.hsv_to_rgb(*rgb))
-        hex_out.append("".join(map(lambda x: chr(x).encode('hex'), rgb)))
-    return hex_out
+def get_color(index):
+    values = ['white','yellow','cyan','green','blue','magenta','red']
+    return values[index]
 
 
 # Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+colors = ((255, 255, 255),(255, 0, 0),(0, 255, 0),(0, 0, 255),(255, 255, 0),(255, 0, 255),(0, 255, 255))
+color_index = 0
 
-SCREEN_WIDTH = 700
-SCREEN_HEIGHT = 500
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 BALL_SIZE = 25
 
 
@@ -41,9 +39,10 @@ class Ball:
         self.y = 0
         self.change_x = 0
         self.change_y = 0
+        self.color = WHITE
 
 
-def make_ball():
+def make_ball(color_id):
     """
     Function to make a new, random ball.
     """
@@ -56,6 +55,12 @@ def make_ball():
     # Speed and direction of rectangle
     ball.change_x = random.randrange(-2, 3)
     ball.change_y = random.randrange(-2, 3)
+    if ball.change_x == 0:
+        ball.change_x = 1
+    if ball.change_y == 0:
+        ball.change_y = 1
+
+    ball.color = colors[color_index]
 
     return ball
 
@@ -65,6 +70,9 @@ def main():
     This is our main program.
     """
     pygame.init()
+
+    color_index = 0
+    modulo_index = 6
 
     # Set the height and width of the screen
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
@@ -80,8 +88,11 @@ def main():
 
     ball_list = []
 
-    ball = make_ball()
+    ball = make_ball(colors[color_index])
+    color_index = (color_index + 1) % modulo_index
     ball_list.append(ball)
+
+
 
     # -------- Main Program Loop -----------
     while not done:
@@ -92,8 +103,10 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 # Space bar! Spawn a new ball.
                 if event.key == pygame.K_SPACE:
-                    ball = make_ball()
+                    ball = make_ball(color_index)
+                    ball.color = colors[color_index]
                     ball_list.append(ball)
+                    color_index = (color_index + 1)
 
         # --- Logic
         for ball in ball_list:
@@ -113,7 +126,7 @@ def main():
 
         # Draw the balls
         for ball in ball_list:
-            pygame.draw.circle(screen, WHITE, [ball.x, ball.y], BALL_SIZE)
+            pygame.draw.circle(screen, ball.color, [ball.x, ball.y], BALL_SIZE)
 
         # --- Wrap-up
         # Limit to 60 frames per second
